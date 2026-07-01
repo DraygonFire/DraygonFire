@@ -564,111 +564,242 @@ function BusinessView() {
 /* ============================================================
    FANTASY CREATOR — LIVE AI, AGE-GATED
    ============================================================ */
+/* ============================================================
+   FINAL VERSION — paste this in place of your current
+   FantasyView function (lines 567–671 in your current App.jsx).
+   Includes the original age-gate (13+) confirmation screen,
+   PLUS the new image generation panel.
+   ============================================================ */
+
 function FantasyView() {
   const [confirmed, setConfirmed] = useState(false);
+  const [mode, setMode] = useState("story"); // "story" | "character" | "world"
   const [prompt, setPrompt] = useState("");
-  const [type, setType] = useState("story");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState(null);
-  const types = [
-    { id: "story", label: "Story Writer", icon: "📖" },
-    { id: "character", label: "Character Creator", icon: "⚔️" },
-    { id: "world", label: "World Builder", icon: "🌍" },
-  ];
+  const [result, setResult] = useState("");
 
-  const generate = async () => {
+  const [imgLoading, setImgLoading] = useState(false);
+  const [imgError, setImgError] = useState("");
+  const [imgUrl, setImgUrl] = useState("");
+
+  async function handleCreate() {
     if (!prompt.trim()) return;
-    setLoading(true); setResult(null); setError("");
+    setLoading(true);
+    setError("");
+    setResult("");
     try {
-      const txt = await askClaude(
-        `Create a ${type} for: "${prompt}". Keep content appropriate for ages 13+. No explicit violence, sexual content, or disturbing themes. Return ONLY valid JSON, no other text: {"title": string, "content": string, "details": string}`
-      );
-      setResult(JSON.parse(txt));
+      const styleMap = {
+        story: "Write a short, imaginative fantasy story based on this idea",
+        character: "Create a detailed fantasy character profile based on this idea, including appearance, personality, and backstory",
+        world: "Design a fantasy world concept based on this idea, including geography, culture, and atmosphere",
+      };
+      const text = await askClaude(`${styleMap[mode]}: ${prompt}. Keep it appropriate for ages 13+, no graphic violence or mature themes.`);
+      setResult(text);
     } catch (e) {
-      setError("Generation failed. Check that the API key is configured in Vercel environment variables.");
+      setError(e.message || "Something went wrong. Try again in a moment.");
     }
     setLoading(false);
-  };
+  }
+
+  async function handleCreateArt() {
+    if (!prompt.trim()) return;
+    setImgLoading(true);
+    setImgError("");
+    setImgUrl("");
+    try {
+      const artPrompt = `Fantasy digital art of: ${prompt}`;
+      const data = await askImage(artPrompt, "vivid");
+      setImgUrl(data.imageUrl);
+    } catch (e) {
+      setImgError(e.message || "Image generation failed. Try again in a moment.");
+    }
+    setImgLoading(false);
+  }
 
   if (!confirmed) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400, gap: 20 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400, gap: 16, textAlign: "center" }}>
         <div style={{ fontSize: 48 }}>✧</div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>Fantasy Creator</div>
-        <div style={{ fontSize: 13, color: C.muted, textAlign: "center", maxWidth: 380, lineHeight: 1.6 }}>
-          Creative storytelling and world-building. Content is AI-moderated and appropriate for ages 13+.
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#eee" }}>Fantasy Creator — Ages 13+</div>
+        <div style={{ fontSize: 14, color: "#999", maxWidth: 420, lineHeight: 1.6 }}>
+          This tool creates AI-generated stories, characters, worlds, and artwork.
+          Content is AI-moderated and intended for users 13 years and older.
         </div>
-        <div style={{ background: "#F5A62311", border: `1px solid ${C.amber}44`, borderRadius: 12, padding: "18px 24px", textAlign: "center", maxWidth: 380, width: "100%" }}>
-          <div style={{ fontSize: 13, color: C.amber, fontWeight: 700, marginBottom: 8 }}>Age Confirmation — 13+</div>
-          <div style={{ fontSize: 12, color: C.mutedMid, marginBottom: 16 }}>By continuing you confirm you are 13 or older.</div>
-          <button onClick={() => setConfirmed(true)} style={{
-            width: "100%", padding: "11px 0", borderRadius: 8, border: "none", cursor: "pointer",
-            background: `linear-gradient(135deg,${C.accent},${C.fire})`, color: "#fff", fontSize: 13, fontWeight: 700,
-          }}>I am 13 or older — Enter</button>
-        </div>
+        <button
+          onClick={() => setConfirmed(true)}
+          style={{
+            padding: "12px 28px",
+            borderRadius: 8,
+            border: "none",
+            background: "linear-gradient(135deg, #7C5CFC, #FF6B35)",
+            color: "#fff",
+            fontWeight: 700,
+            cursor: "pointer",
+            fontSize: 15,
+          }}
+        >
+          I am 13 or older — Continue
+        </button>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ background: C.fireSoft, border: `1px solid ${C.fire}33`, borderRadius: 10, padding: "10px 16px" }}>
-        <div style={{ fontSize: 13, color: C.fire, fontWeight: 600 }}>✧ Fantasy Creator — Ages 13+ · AI-Moderated</div>
+    <div style={{ padding: "24px" }}>
+      <div style={{ marginBottom: 16, color: "#FF6B35", fontWeight: 700 }}>
+        ✧ Fantasy Creator — Ages 13+ · AI-Moderated
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        {types.map((t) => (
-          <button key={t.id} onClick={() => setType(t.id)} style={{
-            flex: 1, padding: "11px 8px", borderRadius: 10,
-            border: `1px solid ${type === t.id ? C.fire + "55" : C.border}`, cursor: "pointer",
-            background: type === t.id ? C.fireSoft : C.surfaceHigh,
-            color: type === t.id ? C.fire : C.mutedMid, textAlign: "center",
-            fontSize: 12, fontWeight: type === t.id ? 700 : 500,
-          }}><div style={{ fontSize: 18, marginBottom: 3 }}>{t.icon}</div>{t.label}</button>
+
+      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+        {["story", "character", "world"].map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            style={{
+              padding: "10px 20px",
+              borderRadius: 8,
+              border: mode === m ? "2px solid #7C5CFC" : "1px solid #333",
+              background: mode === m ? "#7C5CFC22" : "transparent",
+              color: mode === m ? "#7C5CFC" : "#ccc",
+              cursor: "pointer",
+              textTransform: "capitalize",
+              fontWeight: 600,
+            }}
+          >
+            {m === "story" ? "📖 Story Writer" : m === "character" ? "⚔️ Character Creator" : "🌍 World Builder"}
+          </button>
         ))}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-        <div style={{ background: C.surfaceHigh, border: `1px solid ${C.fire}33`, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-          <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)}
-            placeholder={`Describe your ${type}...`}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe your idea... e.g. Create me a mystic dragon that is purple and silver with ice blue eyes"
             style={{
-              flex: 1, minHeight: 130, padding: 12, background: C.bg,
-              border: `1px solid ${C.border}`, borderRadius: 8, outline: "none",
-              resize: "vertical", color: C.text, fontSize: 13, lineHeight: 1.6, fontFamily: "inherit",
-            }} />
-          <button onClick={generate} disabled={loading || !prompt.trim()} style={{
-            width: "100%", padding: "11px 0", borderRadius: 8, border: "none",
-            cursor: loading || !prompt.trim() ? "default" : "pointer",
-            background: loading || !prompt.trim() ? C.border : `linear-gradient(135deg,${C.fire},${C.accent})`,
-            color: loading || !prompt.trim() ? C.muted : "#fff", fontSize: 13, fontWeight: 700,
-          }}>{loading ? "Creating..." : "✧ Create with AI"}</button>
+              width: "100%",
+              minHeight: 160,
+              padding: 14,
+              borderRadius: 10,
+              border: "1px solid #333",
+              background: "#111",
+              color: "#eee",
+              fontSize: 15,
+              resize: "vertical",
+            }}
+          />
+          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+            <button
+              onClick={handleCreate}
+              disabled={loading || !prompt.trim()}
+              style={{
+                flex: 1,
+                padding: "12px",
+                borderRadius: 8,
+                border: "none",
+                background: "linear-gradient(135deg, #7C5CFC, #FF6B35)",
+                color: "#fff",
+                fontWeight: 700,
+                cursor: loading ? "wait" : "pointer",
+                opacity: loading || !prompt.trim() ? 0.6 : 1,
+              }}
+            >
+              {loading ? "Creating..." : "✨ Create with AI"}
+            </button>
+            <button
+              onClick={handleCreateArt}
+              disabled={imgLoading || !prompt.trim()}
+              style={{
+                flex: 1,
+                padding: "12px",
+                borderRadius: 8,
+                border: "1px solid #FF6B35",
+                background: "transparent",
+                color: "#FF6B35",
+                fontWeight: 700,
+                cursor: imgLoading ? "wait" : "pointer",
+                opacity: imgLoading || !prompt.trim() ? 0.6 : 1,
+              }}
+            >
+              {imgLoading ? "Painting..." : "🎨 Create Art"}
+            </button>
+          </div>
         </div>
-        <div style={{ background: C.surfaceHigh, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Your Creation</div>
-          </div>
-          <div style={{ padding: 16, minHeight: 240 }}>
-            {error && <div style={{ color: C.rose, fontSize: 12 }}>{error}</div>}
-            {result && !error ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: C.fire }}>{result.title}</div>
-                <div style={{ fontSize: 13, color: C.text, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{result.content}</div>
-                {result.details && (
-                  <div style={{ fontSize: 12, color: C.mutedMid, background: C.fireSoft, borderRadius: 8, padding: "8px 12px" }}>{result.details}</div>
-                )}
-              </div>
-            ) : !error && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 200, gap: 10 }}>
-                <span style={{ fontSize: 36 }}>✧</span>
-                <div style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>Describe your idea and watch it come to life</div>
-              </div>
-            )}
-          </div>
+
+        <div>
+          <div style={{ fontWeight: 700, marginBottom: 10, color: "#eee" }}>Your Creation</div>
+
+          {error && (
+            <div style={{ color: "#ff6b6b", marginBottom: 12, fontSize: 14 }}>{error}</div>
+          )}
+          {result && (
+            <div
+              style={{
+                background: "#111",
+                border: "1px solid #333",
+                borderRadius: 10,
+                padding: 16,
+                whiteSpace: "pre-wrap",
+                fontSize: 14,
+                lineHeight: 1.6,
+                color: "#ddd",
+                marginBottom: 16,
+                maxHeight: 260,
+                overflowY: "auto",
+              }}
+            >
+              {result}
+            </div>
+          )}
+
+          {imgError && (
+            <div style={{ color: "#ff6b6b", marginBottom: 12, fontSize: 14 }}>{imgError}</div>
+          )}
+          {imgLoading && (
+            <div style={{ color: "#888", fontSize: 14, marginBottom: 12 }}>
+              🎨 Bringing your imagination to life... (usually 10-20 seconds)
+            </div>
+          )}
+          {imgUrl && (
+            <div>
+              <img
+                src={imgUrl}
+                alt="AI generated fantasy art"
+                style={{
+                  width: "100%",
+                  borderRadius: 10,
+                  border: "1px solid #333",
+                }}
+              />
+              <a
+                href={imgUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-block",
+                  marginTop: 10,
+                  color: "#7C5CFC",
+                  fontSize: 13,
+                }}
+              >
+                Open full size / save image →
+              </a>
+            </div>
+          )}
+
+          {!result && !imgUrl && !loading && !imgLoading && (
+            <div style={{ color: "#666", fontSize: 14 }}>
+              Describe your idea, then choose "Create with AI" for the written creation, and/or "Create Art" to see it come to life visually.
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
 
 /* ============================================================
    PLACEHOLDER TABS (shell, not yet wired)
