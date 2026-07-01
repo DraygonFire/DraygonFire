@@ -76,19 +76,6 @@ async function askClaude(prompt, maxTokens = 1000) {
   }
   return (data.text || "").replace(/```json|```/g, "").trim();
 }
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: maxTokens,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  const data = await res.json();
-  const text = data?.content?.map((b) => b.text || "").join("").trim() || "";
-  return text.replace(/```json|```/g, "").trim();
-}
-
 /* ---------- Shared UI bits ---------- */
 function Tag({ label, color, small }) {
   return (
