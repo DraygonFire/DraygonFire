@@ -65,7 +65,17 @@ const VERSIONS = [
 
 /* ---------- Claude API helper ---------- */
 async function askClaude(prompt, maxTokens = 1000) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/claude", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt, maxTokens }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error || "Request failed");
+  }
+  return (data.text || "").replace(/```json|```/g, "").trim();
+}
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
