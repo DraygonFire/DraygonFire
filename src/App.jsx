@@ -76,6 +76,18 @@ async function askClaude(prompt, maxTokens = 1000) {
   }
   return (data.text || "").replace(/```json|```/g, "").trim();
 }
+async function askImage(prompt, style = "vivid") {
+  const res = await fetch("/api/image", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt, style }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error || "Image generation failed");
+  }
+  return data;
+}
 /* ---------- Shared UI bits ---------- */
 function Tag({ label, color, small }) {
   return (
