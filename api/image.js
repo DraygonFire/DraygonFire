@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { prompt, size, style } = req.body;
+    const { prompt, size } = req.body;
 
     if (!prompt) {
       res.status(400).json({ error: 'Missing prompt' });
@@ -33,8 +33,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Basic content safety pre-check happens on OpenAI's side automatically,
-    // but we also keep prompts scoped to creative/art use only.
     const safePrompt = `${prompt}. Digital art style, high quality, imaginative and appropriate for all audiences.`;
 
     const openaiResponse = await fetch('https://api.openai.com/v1/images/generations', {
@@ -48,7 +46,6 @@ export default async function handler(req, res) {
         prompt: safePrompt,
         n: 1,
         size: size || '1024x1024',
-        style: style || 'vivid', // 'vivid' = dramatic/fantasy, 'natural' = realistic
         quality: 'standard',
       }),
     });
