@@ -1,8 +1,4 @@
 // api/image.js
-// Vercel Serverless Function — generates images via OpenAI's DALL-E 3.
-// Runs server-side, keeps the OpenAI key hidden from the browser,
-// and avoids CORS issues the same way api/claude.js does for text.
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -29,7 +25,7 @@ export default async function handler(req, res) {
     const apiKey = process.env.VITE_OPENAI_API_KEY;
 
     if (!apiKey) {
-      res.status(500).json({ error: 'Image generation is not configured yet. Add VITE_OPENAI_API_KEY in Vercel environment variables.' });
+      res.status(500).json({ error: 'Image generation is not configured yet.' });
       return;
     }
 
@@ -42,11 +38,10 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'dall-e-3',
+        model: 'gpt-image-2',
         prompt: safePrompt,
         n: 1,
         size: size || '1024x1024',
-        quality: 'standard',
       }),
     });
 
@@ -59,15 +54,23 @@ export default async function handler(req, res) {
       return;
     }
 
-    const imageUrl = data?.data?.[0]?.url || null;
-    const revisedPrompt = data?.data?.[0]?.revised_prompt || safePrompt;
+    // Newer gpt-image models return base64 data (b64_json) instead of a URL.
+    // Handle both formats so this works regardless of which the API sends back.
+    const imageData = data?.data?.[0];
+    let imageUrl = null;
+
+    if (imageData?.url) {
+      imageUrl = imageData.url;
+    } else if (imageData?.b64_json) {
+      imageUrl = `data:image/png;base64,${imageData.b64_json}`;
+    }
 
     if (!imageUrl) {
       res.status(500).json({ error: 'No image returned' });
       return;
     }
 
-    res.status(200).json({ imageUrl, revisedPrompt });
+    res.status(200).json({ imageUrl, revisedPrompt: imageData?.revised_prompt || safePrompt });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Server error' });
   }
