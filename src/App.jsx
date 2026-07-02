@@ -1210,7 +1210,8 @@ export default function App() {
           {active === "research" && <ResearchView />}
           {active === "business" && <BusinessView />}
           {active === "fantasy" && <FantasyView />}
-          { id: "fiery", label: "Fiery Artistry", icon: "🔥", badge: "LIVE AI" },          {active === "create" && <PlaceholderView title="Create & Clips" icon="✦" color={C.accent} desc="Video repurposing — upload a video, get 10+ platform-ready clips with AI captions. Roadmap feature, not yet wired to live processing." />}
+          {active === "fiery" && <FieryArtistryView />}
+          {active === "create" && <PlaceholderView title="Create & Clips" icon="✦" color={C.accent} desc="Video repurposing — upload a video, get 10+ platform-ready clips with AI captions. Roadmap feature, not yet wired to live processing." />}
           {active === "publish" && <PlaceholderView title="Publish" icon="◎" color={C.green} desc="One-click publishing to every social platform simultaneously. Requires Buffer API integration — roadmap feature." />}
           {active === "progress" && <PlaceholderView title="My Progress" icon="◆" color={C.amber} desc="XP, streaks, achievements, and AI daily digest. Requires a database (Supabase) to persist user data — roadmap feature." />}
           {active === "safety" && <SafetyView />}
