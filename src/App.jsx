@@ -120,6 +120,7 @@ function Sidebar({ active, setActive }) {
     { id: "research", label: "Research", icon: "◉", badge: "LIVE AI" },
     { id: "business", label: "Business Suite", icon: "▣", badge: "LIVE AI" },
     { id: "fantasy", label: "Fantasy Creator", icon: "✧", badge: "LIVE AI" },
+    { id: "fiery", label: "Fiery Artistry", icon: "🔥", badge: "LIVE AI" },
     { id: "create", label: "Create & Clips", icon: "✦" },
     { id: "publish", label: "Publish", icon: "◎" },
     { id: "progress", label: "My Progress", icon: "◆" },
@@ -811,6 +812,210 @@ function FantasyView() {
     </div>
   );
 }
+function FieryArtistryView() {
+  const [category, setCategory] = useState("realistic");
+  const [prompt, setPrompt] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [imgUrl, setImgUrl] = useState("");
+  const [gallery, setGallery] = useState([]);
+
+  const categories = [
+    { id: "realistic",   label: "📷 Realistic",        hint: "Photographic, lifelike" },
+    { id: "fantasy",     label: "✨ Fantasy",           hint: "Digital painting, mystical" },
+    { id: "anime",       label: "🎌 Anime",             hint: "Manga & anime style" },
+    { id: "illustration",label: "🎨 Illustration",      hint: "Flat design, clean lines" },
+    { id: "branding",    label: "🏢 Branding & Logos",  hint: "Logo concepts, brand marks" },
+    { id: "architecture",label: "🏠 Architecture",      hint: "Interiors, home concepts" },
+    { id: "pattern",     label: "🧵 Patterns & Texture",hint: "Repeatable, decorative" },
+  ];
+
+  const styleModifiers = {
+    realistic: "photorealistic, high detail, natural lighting, professional photography",
+    fantasy: "fantasy digital art, painterly, dramatic lighting, imaginative",
+    anime: "anime style, manga art, clean line work, vibrant cel-shaded colors",
+    illustration: "flat illustration style, clean vector-like lines, modern graphic design",
+    branding: "professional logo design, clean and minimal, suitable for branding, vector style, simple background",
+    architecture: "architectural visualization, interior design concept, realistic lighting, high quality render",
+    pattern: "seamless repeatable pattern, decorative texture, flat design, tileable",
+  };
+
+  async function handleGenerate() {
+    if (!prompt.trim()) return;
+    setLoading(true);
+    setError("");
+    setImgUrl("");
+    try {
+      const fullPrompt = `${prompt}. Style: ${styleModifiers[category]}.`;
+      const data = await askImage(fullPrompt);
+      setImgUrl(data.imageUrl);
+      setGallery((prev) => [{ url: data.imageUrl, prompt, category }, ...prev].slice(0, 12));
+    } catch (e) {
+      setError(e.message || "Something went wrong. Try again in a moment.");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ padding: "24px" }}>
+      <div style={{ marginBottom: 4, color: "#FF6B35", fontWeight: 700, fontSize: 18 }}>
+        🔥 Fiery Artistry
+      </div>
+      <div style={{ marginBottom: 20, color: "#999", fontSize: 14 }}>
+        Realistic photos, fantasy art, anime, logos, patterns, interiors — bring anything to life.
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+        {categories.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => setCategory(c.id)}
+            title={c.hint}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 8,
+              border: category === c.id ? "2px solid #7C5CFC" : "1px solid #333",
+              background: category === c.id ? "#7C5CFC22" : "transparent",
+              color: category === c.id ? "#7C5CFC" : "#ccc",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: 13,
+            }}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder={
+              category === "branding"
+                ? "e.g. A modern logo for a coffee roastery called 'Ember & Oak', warm tones"
+                : category === "architecture"
+                ? "e.g. A cozy 5-bedroom modular farmhouse living room, natural light, warm wood"
+                : "Describe what you want to create..."
+            }
+            style={{
+              width: "100%",
+              minHeight: 140,
+              padding: 14,
+              borderRadius: 10,
+              border: "1px solid #333",
+              background: "#111",
+              color: "#eee",
+              fontSize: 15,
+              resize: "vertical",
+            }}
+          />
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !prompt.trim()}
+            style={{
+              width: "100%",
+              marginTop: 12,
+              padding: "13px",
+              borderRadius: 8,
+              border: "none",
+              background: "linear-gradient(135deg, #7C5CFC, #FF6B35)",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: loading ? "wait" : "pointer",
+              opacity: loading || !prompt.trim() ? 0.6 : 1,
+            }}
+          >
+            {loading ? "🔥 Igniting your creation..." : "🔥 Create with Fiery Artistry"}
+          </button>
+
+          <div
+            style={{
+              marginTop: 20,
+              padding: 16,
+              borderRadius: 10,
+              border: "1px dashed #444",
+              background: "#7C5CFC0a",
+            }}
+          >
+            <div style={{ color: "#B06EFF", fontWeight: 700, fontSize: 13, marginBottom: 6 }}>
+              🎬 Animated & Video Creation — Coming Soon
+            </div>
+            <div style={{ color: "#888", fontSize: 12, lineHeight: 1.6 }}>
+              Bring your art to life with motion — animated scenes, short video clips, and
+              moving brand assets. This feature is in active development for a future
+              DraygonFire release.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style={{ fontWeight: 700, marginBottom: 10, color: "#eee" }}>Your Creation</div>
+
+          {error && (
+            <div style={{ color: "#ff6b6b", marginBottom: 12, fontSize: 14 }}>{error}</div>
+          )}
+          {loading && (
+            <div style={{ color: "#888", fontSize: 14, marginBottom: 12 }}>
+              🔥 This usually takes 10-20 seconds...
+            </div>
+          )}
+          {imgUrl && (
+            <div style={{ marginBottom: 20 }}>
+              <img
+                src={imgUrl}
+                alt="AI generated artwork"
+                style={{ width: "100%", borderRadius: 10, border: "1px solid #333" }}
+              />
+              <a
+                href={imgUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ display: "inline-block", marginTop: 10, color: "#7C5CFC", fontSize: 13 }}
+              >
+                Open full size / save image →
+              </a>
+            </div>
+          )}
+          {!imgUrl && !loading && !error && (
+            <div style={{ color: "#666", fontSize: 14, marginBottom: 20 }}>
+              Pick a style above, describe your idea, and watch it come to life.
+            </div>
+          )}
+
+          {gallery.length > 0 && (
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: "#eee", fontSize: 13 }}>
+                Recent Creations
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                {gallery.map((item, i) => (
+                  <img
+                    key={i}
+                    src={item.url}
+                    alt={item.prompt}
+                    title={item.prompt}
+                    onClick={() => setImgUrl(item.url)}
+                    style={{
+                      width: "100%",
+                      aspectRatio: "1",
+                      objectFit: "cover",
+                      borderRadius: 8,
+                      border: "1px solid #333",
+                      cursor: "pointer",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 
 /* ============================================================
@@ -1005,7 +1210,7 @@ export default function App() {
           {active === "research" && <ResearchView />}
           {active === "business" && <BusinessView />}
           {active === "fantasy" && <FantasyView />}
-          {active === "create" && <PlaceholderView title="Create & Clips" icon="✦" color={C.accent} desc="Video repurposing — upload a video, get 10+ platform-ready clips with AI captions. Roadmap feature, not yet wired to live processing." />}
+          { id: "fiery", label: "Fiery Artistry", icon: "🔥", badge: "LIVE AI" },          {active === "create" && <PlaceholderView title="Create & Clips" icon="✦" color={C.accent} desc="Video repurposing — upload a video, get 10+ platform-ready clips with AI captions. Roadmap feature, not yet wired to live processing." />}
           {active === "publish" && <PlaceholderView title="Publish" icon="◎" color={C.green} desc="One-click publishing to every social platform simultaneously. Requires Buffer API integration — roadmap feature." />}
           {active === "progress" && <PlaceholderView title="My Progress" icon="◆" color={C.amber} desc="XP, streaks, achievements, and AI daily digest. Requires a database (Supabase) to persist user data — roadmap feature." />}
           {active === "safety" && <SafetyView />}
